@@ -2,7 +2,7 @@
 title: "README"
 author: "Emily Lacroix"
 date: "7/3/2020"
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
@@ -22,3 +22,5 @@ Each RMarkdown file regenerates all results and figures used in the manuscript. 
 `OtherAnalyses.md` shows data processing for ancillary data such as dissolved organic carbon, pH, etc. 
 
 Please contact the corresponding author(s) with questions or enhanced access. 
+
+
