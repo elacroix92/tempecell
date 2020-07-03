@@ -1,0 +1,14 @@
+---
+title: "README"
+author: "Emily Lacroix"
+date: "7/3/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This repo contains the code and data to reproduce all results in the 2020 **Biogeochemistry** publication: *Effects of Moisture and Physical Disturbance on Pore-Scale Oxygen Content and Anaerobic Metabolisms in Upland Soils*
+
+`TempeCell_MasterSpreadsheet.xlsx` contains all of the data used in analyses. Please contact the corresponding author(s) for access to raw data and code used to compile raw data. 
