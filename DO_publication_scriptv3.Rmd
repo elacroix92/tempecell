@@ -1,0 +1,718 @@
+---
+title: "Oxygen Analysis & Figures - Biogeochem. 2020"
+author: "Emily Lacroix"
+date: "4/15/2020"
+output: github_document
+---
+
+```{r knitr setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, dpi = 300)
+```
+
+## Set-Up
+
+### Load libraries
+```{r Libraries, results='hide', message=FALSE, warning=FALSE}
+
+library(MASS)
+library(MuMIn)
+library(car)
+library(readxl)
+library(modelr)
+library(tidyverse)
+
+conflicted::conflict_prefer("select", "dplyr")
+conflicted::conflict_prefer("filter", "dplyr")
+
+```
+
+### Designate filepaths
+```{r Input files}
+
+data_file <- "~/Desktop/TempeCell_MasterSpreadsheet.xlsx"
+
+```
+
+
+###  Figure labels
+
+```{r Field Key, warning=FALSE}
+#Field key
+fields <- 
+  tribble(
+    ~crop_type, ~fields,
+    "Native Grassland", c("7-1", "8-6", "3-6"),
+    "Riparian Grassland", c("RG-1", "RG-2", "RG-3"),
+    "Wheat/Cover", c("1-6", "3-8", "7-3"),
+    "Wheat/Fallow", c("1-7", "4-9", "8-3"),
+  ) %>% 
+  unnest()
+```
+
+```{r Moisture Labels}
+moisture_label <- c("low" = "< 80 % WFPS", "high" = "> 80 % WFPS")
+```
+
+
+## Import & Clean Data
+
+### Import  data
+Filter out any Fe cores as they were not utilized in our incubations
+```{r Gravimetric Data}
+grav_data <- 
+  read_xlsx(
+    data_file, 
+    sheet = "GravimetricData",
+    na = "NA"
+  ) %>%   
+  filter(!str_detect(sample, "Fe"))
+```
+
+
+```{r DO data}
+raw_do <- 
+  read_xlsx(
+    data_file, 
+    sheet = "DissolvedOxygen",
+    na = "NA"
+  )
+```
+
+
+```{r Gas filled Bags}
+gas_filled <- 
+  read_xlsx(data_file, sheet = "GasFilledBags", na = "NA")
+```
+
+### Clean-up data
+
+This code:
+
+* sets all negative DO values to zero
+* sets all DO values greater than 283 to 283
+* omits any data points with a dilution factor greater than 1
+* removes all data points where the bags filled with nitrogen gas
+* classifies core moistures into two classes: above and below 80% WFPS
+* calculates the oxygen consumption in each core
+* classifies our data into different disturbance classes
+
+```{r Clean Up DO}
+
+do <- 
+  raw_do %>% 
+  mutate_at(vars(adj_do), ~ if_else(. < 0, 0, .)) %>% 
+  mutate_at(vars(adj_do), ~ if_else(. > 283, 283, .)) %>% 
+  mutate_at(vars(incubated_days, pressure), as.integer) %>% 
+  left_join(fields, by = c("field" = "fields")) %>% 
+  filter(df <= 1) %>% 
+  anti_join(
+    gas_filled, 
+    by = 
+      c(
+        "field", 
+        "incubated_days" = "day", 
+        "pressure", 
+        "moisture", 
+        "disturbed"
+      )
+  ) %>% 
+  left_join(
+    grav_data %>% select(-sample), 
+    by = 
+      c("field", "incubated_days" = "day", "disturbed", "moisture")
+  ) %>% 
+  mutate(
+    AMC = case_when(
+      wfps < 0.80 ~ "low",
+      wfps > 0.80 ~ "high")
+  ) %>% 
+  mutate_at(
+    vars(AMC),
+    ~ factor(., levels = c("low", "high"))
+  ) %>% 
+  mutate(
+    total_do = adj_do * flush_vol / 1000,
+    theoretical_max = 283 * flush_vol / 1000,
+    umol_consumed = theoretical_max - total_do
+  ) %>% 
+  mutate(
+    tillage = 
+      case_when(
+        crop_type %in% c("Wheat/Fallow", "Wheat/Cover") ~ "Tilled Cropland",
+        crop_type %in% c("Native Grassland", "Riparian Grassland") & 
+          disturbed == FALSE ~ "Undisturbed Grassland",
+        crop_type %in% c("Native Grassland", "Riparian Grassland") & 
+          disturbed == TRUE ~ "Sieved & Re-packed Grassland",
+      )
+  ) %>% 
+  drop_na(pressure)
+
+```
+
+## Figures & Tables
+
+### Table 3: Oxygen Consumed 
+```{r Table 3 Mean Oxygen consumption}
+
+do %>% 
+  drop_na(umol_consumed) %>% 
+  group_by(pressure, tillage) %>% 
+  summarise(
+    mean_umol_consumed = mean(umol_consumed, na.rm = TRUE),
+    se_umol_consumed = sd(umol_consumed, na.rm = TRUE)/sqrt(n())
+  ) %>% 
+  arrange(tillage, pressure) %>%
+  mutate_at(
+    vars(mean_umol_consumed, se_umol_consumed), 
+    ~ round(., digits = 3)
+  ) %>% 
+  knitr::kable()
+  
+```
+
+### Table 3: Proportion of Oxygen Consumed
+```{r Table 3 Proportion Oxygen Consumed}
+
+do %>% 
+  drop_na(umol_consumed) %>% 
+  pivot_wider(
+    id_cols = 
+      c(
+        "field", 
+        "incubated_days", 
+        "crop_type", 
+        "wfps", 
+        "AMC", 
+        "tillage",
+        "disturbed"
+      ),
+    names_from = "pressure",
+    values_from = "umol_consumed"
+  ) %>% 
+  rename_at(
+    vars(`100`,`300`,`500`),
+    ~ paste0("umol_consumed_",.)
+  ) %>% 
+  mutate(
+    total_umol_consumed = 
+      umol_consumed_100 + umol_consumed_300 + umol_consumed_500,
+    prop_consumed_100 = umol_consumed_100 / total_umol_consumed,
+    prop_consumed_300 = umol_consumed_300 / total_umol_consumed,  
+    prop_consumed_500 = umol_consumed_500 / total_umol_consumed,
+    
+  ) %>% 
+  drop_na(total_umol_consumed) %>% 
+  group_by(tillage) %>% 
+  summarize(
+    mean_prop_100 = mean(prop_consumed_100, na.rm = TRUE),
+    se_prop_100 = sd(prop_consumed_100, na.rm = TRUE) / sqrt(n()),
+    mean_prop_300 = mean(prop_consumed_300, na.rm = TRUE),
+    se_prop_300 = sd(prop_consumed_300, na.rm = TRUE) / sqrt(n()),
+    mean_prop_500 = mean(prop_consumed_500, na.rm = TRUE),
+    se_prop_500 = sd(prop_consumed_500, na.rm = TRUE) / sqrt(n())
+  ) %>% 
+  pivot_longer(
+    cols = c(
+      mean_prop_100, 
+      mean_prop_300, 
+      mean_prop_500, 
+      se_prop_100, 
+      se_prop_300,
+      se_prop_500
+    )
+  ) %>% 
+  rename(prop_consumed = value) %>% 
+  mutate(
+    pressure = str_extract(name, "\\d{3}"),
+    value_type = str_extract(name, "\\w{2,4}(?=_)")
+  ) %>% 
+  pivot_wider(
+    id_cols = c("tillage", "pressure"),
+    names_from = c("value_type"),
+    values_from = "prop_consumed"
+  ) %>% 
+  mutate_at(vars(mean, se), round, digits = 4) %>% 
+  knitr::kable()
+
+```
+
+### Figure S4: Boxplot of DO by disturbance and moisture
+```{r Fig S4}
+do %>% 
+  mutate(
+    tillage = 
+      case_when(
+        crop_type %in% c("Wheat/Fallow", "Wheat/Cover") ~ "Tilled Cropland",
+        crop_type %in% c("Native Grassland", "Riparian Grassland") & 
+          disturbed == FALSE ~ "Undisturbed Grassland",
+        crop_type %in% c("Native Grassland", "Riparian Grassland") & 
+          disturbed == TRUE ~ "Sieved & Re-packed Grassland",
+      )
+  ) %>% 
+  mutate_at(
+    vars(tillage),
+    ~ factor(
+      ., 
+      levels = 
+        c(
+          "Undisturbed Grassland", 
+          "Tilled Cropland", 
+          "Sieved & Re-packed Grassland" 
+        ),
+      labels = 
+        c(
+          "Undisturbed \nGrassland", 
+          "Tilled \nCropland",
+          "Sieved \nGrassland"
+        )
+      )
+  ) %>% 
+  drop_na(pressure) %>% 
+  mutate_at(
+    vars(pressure),
+    ~ factor(
+      .,
+      levels = c(100, 300, 500), 
+      ordered = TRUE 
+    )
+  ) %>% 
+  ggplot(aes(x = pressure, y = adj_do)) + 
+  geom_hline(aes(yintercept = 283), linetype = 2, color = "darkred") +
+  geom_hline(aes(yintercept = 15), linetype = 2, color = "darkred") +
+  geom_boxplot(
+    aes(fill = tillage), 
+    position = position_dodge(0.8),
+    color = "black"
+  ) +
+  scale_fill_brewer(palette = "Greys") + 
+  scale_x_discrete(
+    labels = 
+      c(
+        expression(paste("> 3", mu, "m")),
+        expression(paste("1 - 3", mu, "m")),
+        expression(paste("0.6 - 1", mu, "m"))
+      )
+  ) +
+  facet_grid(
+    rows = vars(AMC),
+    labeller = 
+      labeller(
+        AMC = moisture_label,
+        pressure = label_parsed
+      )
+  ) +
+  theme_bw() + 
+  theme(
+    legend.position = "right",
+    legend.text = element_text(margin = margin(b = 2, t = 2, unit = "pt")),
+    axis.ticks.x = element_line(color = "grey92")
+  ) + 
+  labs(
+    fill = "Degree of \nDisturbance",
+    y = expression(paste("Dissolved Oxygen (",mu,"M)")),
+    x = "Effective Pore Diameter"
+  ) 
+
+
+```
+
+
+### Figure 3: Boxplot of DO by disturbance, averaged across moisture classes
+
+__Calculate the means for each pore size__
+```{r}
+average_do_by_pore <- 
+  do %>% 
+  mutate(
+    tillage = 
+      case_when(
+        crop_type %in% c("Wheat/Fallow", "Wheat/Cover") ~ "Tilled Cropland",
+        crop_type %in% c("Native Grassland", "Riparian Grassland") & 
+          disturbed == FALSE ~ "Undisturbed Grassland",
+        crop_type %in% c("Native Grassland", "Riparian Grassland") & 
+          disturbed == TRUE ~ "Sieved & Re-packed Grassland",
+      )
+  ) %>% 
+  mutate_at(
+    vars(tillage),
+    ~ factor(
+      ., 
+      levels = 
+        c(
+          "Undisturbed Grassland", 
+          "Tilled Cropland", 
+          "Sieved & Re-packed Grassland" 
+        ),
+      labels = 
+        c(
+          "Undisturbed \nGrassland", 
+          "Tilled \nCropland",
+          "Sieved \nGrassland"
+        )
+      )
+  ) %>% 
+  drop_na(pressure) %>% 
+  mutate_at(
+    vars(pressure),
+    ~ factor(
+      .,
+      levels = c(100, 300, 500),
+      ordered = TRUE
+    )
+  ) %>%
+  group_by(pressure) %>% 
+  summarise(
+    mean_do = mean(adj_do, na.rm = TRUE),
+    se_do = sd(adj_do, na.rm = TRUE)/sqrt(n())
+  ) 
+
+```
+
+```{r}
+average_do_by_pore %>% knitr::kable()
+```
+
+__Plot__
+```{r Fig 3}
+do %>% 
+  mutate(
+    tillage = 
+      case_when(
+        crop_type %in% c("Wheat/Fallow", "Wheat/Cover") ~ "Tilled Cropland",
+        crop_type %in% c("Native Grassland", "Riparian Grassland") & 
+          disturbed == FALSE ~ "Undisturbed Grassland",
+        crop_type %in% c("Native Grassland", "Riparian Grassland") & 
+          disturbed == TRUE ~ "Sieved & Re-packed Grassland",
+      )
+  ) %>% 
+  mutate_at(
+    vars(tillage),
+    ~ factor(
+      ., 
+      levels = 
+        c(
+          "Undisturbed Grassland", 
+          "Tilled Cropland", 
+          "Sieved & Re-packed Grassland" 
+        ),
+      labels = 
+        c(
+          "Undisturbed Grassland", 
+          "Tilled Cropland",
+          "Disturbed Grassland"
+        )
+      )
+  ) %>% 
+  drop_na(pressure) %>% 
+  mutate_at(
+    vars(pressure),
+    ~ factor(
+      .,
+      levels = c(100, 300, 500), 
+      ordered = TRUE 
+    )
+  ) %>% 
+  ggplot() + 
+  geom_hline(aes(yintercept = 283), linetype = 2, color = "black") +
+  geom_hline(aes(yintercept = 15), linetype = 2, color = "black") +
+  geom_boxplot(
+    aes(x = pressure, y = adj_do, fill = tillage), 
+    position = position_dodge(0.8),
+  ) + 
+  geom_pointrange(
+    data = average_do_by_pore,
+    aes(
+      x = pressure,
+      y = mean_do,
+      ymin = mean_do - se_do,
+      ymax = mean_do + se_do
+    ),
+    color = "darkred",
+    alpha = 0.8
+  ) +
+  scale_fill_brewer(palette = "Greys") + 
+  scale_x_discrete(
+    labels =
+      c(
+        expression(paste("> 3", mu, "m")),
+        expression(paste("1 - 3", mu, "m")),
+        expression(paste("0.6 - 1", mu, "m"))
+      )
+  ) +
+  theme_bw() + 
+  theme(
+    rect = element_rect(fill = "transparent"),
+    legend.position = "right",
+    legend.text = element_text(margin = margin(b = 2, t = 2, unit = "pt")),
+    text = element_text(family = "Arial", color = "black"),
+    panel.grid = element_blank(),
+    panel.background = element_rect(fill = "transparent"), 
+    plot.background = element_rect(fill = "transparent", color = NA)
+  ) + 
+  labs(
+    fill = NULL,
+    y = expression(paste("Dissolved Oxygen (",mu,"M)")),
+    x = "Effective Pore Diameter"
+  ) 
+
+
+
+```
+
+
+### Figure 4: DO concentration over time
+```{r Figure 4}
+
+do %>% 
+  filter(disturbed == FALSE) %>% 
+  drop_na(pressure) %>% 
+  mutate_at(
+    vars(pressure),
+    ~ factor(
+      .,
+      levels = c(100, 300, 500), 
+      ordered = TRUE, 
+      labels = 
+        c(
+          expression(paste("> 3", mu, "m")),
+          expression(paste("1 - 3", mu, "m")),
+          expression(paste("0.6 - 1", mu, "m"))
+        )
+    )
+  ) %>% 
+  group_by(incubated_days, pressure, AMC) %>% 
+  summarise(
+    adj_do_mean = mean(adj_do, na.rm = TRUE),
+    se_adj_do = sd(adj_do, na.rm = TRUE) / sqrt(n())
+  ) %>% 
+  ggplot(
+    aes(
+      x = incubated_days, 
+      color = AMC, 
+      fill = AMC, 
+      y = adj_do_mean
+    )
+  ) + 
+  geom_point(size = 2, shape = 21) +
+  geom_errorbar(
+    aes(
+      ymin = adj_do_mean - se_adj_do, 
+      ymax = adj_do_mean + se_adj_do
+    ),
+    width = 1
+  ) +
+  geom_line(aes(linetype = AMC)) + 
+  geom_hline(yintercept = 283, linetype = 2) + 
+  scale_x_continuous(breaks = c(7, 14, 28)) + 
+  scale_color_manual(values = c("gray60", "grey12")) + 
+  scale_fill_manual(
+    values = c("gray60", "grey12"), 
+    labels = c("< 80", "> 80")
+  ) + 
+  scale_linetype_manual(
+    values = c(2,3)
+  ) + 
+  facet_grid(
+    cols = vars(pressure),
+    labeller = label_parsed
+  ) + 
+  labs(
+    y = expression(paste("Dissolved Oxygen (",mu,"M)")),
+    x = "Days Incubated",
+    fill = " Moisture \n(% WFPS)"
+  ) + 
+  guides(
+    color = "none",
+    linetype = "none"
+  ) +
+  theme_bw() + 
+  theme(
+    legend.title = element_text(size = 8, face = "bold", color = "black"),
+  ) 
+
+```
+
+
+## Statistics 
+
+### Sample Sizes (N)
+```{r Sample Size Table}
+do %>%
+  drop_na(umol_consumed) %>%
+  group_by(pressure, tillage, incubated_days) %>% 
+  summarise(
+    n = n()
+  ) %>% 
+  knitr::kable()
+```
+
+### Checking Normality for adj_do values
+```{r Shapiro Test for Normality - no transformation}
+do %>% 
+  drop_na(adj_do) %>% 
+  group_by(tillage, pressure) %>% 
+  summarise(
+    normality_stat = 
+      if_else(
+        sd(adj_do, na.rm = TRUE) != 0, 
+        shapiro.test(adj_do)$statistic, 
+        NA_real_
+      ),
+    normality_p_value =  
+      if_else(
+        sd(adj_do, na.rm = TRUE) != 0, 
+        shapiro.test(adj_do)$p.value, 
+        NA_real_
+      )
+  ) %>% 
+  knitr::kable()
+```
+
+The data are not normal.
+
+### Check for equal variances
+```{r}
+
+leveneTest(
+  adj_do ~ tillage*pressure, 
+  data = do %>% 
+  mutate_at(vars(pressure), as.factor)
+)
+```
+The variances amongst the tillage x pressure groups are unequal. 
+
+
+### GLM fits - adj_do
+
+Create a dataframe with unique observation identifiers to use in GLMMs
+```{r make do_core_id}
+
+do_core_id <-
+  do %>% 
+  group_by(field, incubated_days, disturbed, moisture) %>% 
+  pivot_wider(
+    .,
+    id_cols = c(
+      field, 
+      incubated_days, 
+      disturbed, 
+      moisture, 
+      AMC,
+      crop_type,
+      bulk_dens,
+      wfps,
+      dry_mass,
+      tillage
+    ),
+    names_from = pressure, 
+    values_from = adj_do
+  ) %>% 
+  rowid_to_column() %>% 
+  pivot_longer(
+    cols = c(`100`, `300`, `500`), 
+    names_to = "pressure", 
+    values_to = "adj_do"
+  ) %>% 
+  rename(
+    core_id = rowid
+  ) %>% 
+  rowid_to_column(var = "obsv_id")
+
+```
+
+#### GLMM for overall
+```{r Table 2: glmm overall, results="hide", message=FALSE}
+
+glmmPQL_overall <-
+  glmmPQL(
+    adj_do ~ tillage + bulk_dens * wfps + incubated_days + pressure,
+    random = list(field = ~1, core_id = ~1),
+    family = quasipoisson(link = "log"),
+    data = 
+      do_core_id %>% 
+      ungroup() %>% 
+      mutate_at(vars(adj_do), as.integer) %>% 
+      mutate_at(vars(pressure, field), as.factor)
+  )
+
+
+```
+
+```{r}
+glmmPQL_overall %>% 
+  summary()
+
+```
+
+
+
+#### GLMM for > 3.0 um
+```{r Table 2: > 3 um, results="hide", message=FALSE}
+
+glmmPQL_do100 <-
+  glmmPQL(
+    adj_do ~ tillage + bulk_dens * wfps + incubated_days,
+    random = list(field = ~1),
+    family = quasipoisson(link = "log"),
+    data = 
+      do_core_id %>% 
+      ungroup() %>% 
+      filter(pressure == 100) %>% 
+      mutate_at(vars(adj_do), as.integer) %>% 
+      mutate_at(vars(pressure, field), as.factor)
+  )
+
+```
+
+
+```{r}
+glmmPQL_do100 %>% summary() 
+```
+
+#### GLMM for 1.0 - 3.0 um
+```{r glmmPQL 1-3 um, results="hide", message=FALSE}
+
+glmmPQL_do300 <-
+  glmmPQL(
+    adj_do ~ tillage + bulk_dens * wfps + incubated_days,
+    random = list(field = ~1),
+    family = quasipoisson(link = "log"),
+    data = 
+      do_core_id %>% 
+      ungroup() %>% 
+      filter(pressure == 300) %>% 
+      mutate_at(vars(adj_do), as.integer) %>% 
+      mutate_at(vars(pressure, field), as.factor)
+  )
+
+```
+
+```{r}
+glmmPQL_do300 %>% summary()
+```
+
+#### GLMM for 0.6 - 1.0 um
+
+```{r glmmPQL 0.6 to 1 um, results="hide", message=FALSE}
+
+glmmPQL_do500 <-
+  glmmPQL(
+    adj_do ~ tillage + bulk_dens * wfps + incubated_days,
+    random = list(field = ~1),
+    family = quasipoisson(link = "log"),
+    data = 
+      do_core_id %>% 
+      ungroup() %>% 
+      filter(pressure == 500) %>% 
+      mutate_at(vars(adj_do), as.integer) %>% 
+      mutate_at(vars(pressure, field), as.factor)
+  )
+
+```
+```{r}
+glmmPQL_do500 %>% summary()
+```
+
+
+
+
