@@ -303,6 +303,34 @@ grav_data %>%
 
 ```
 
+### Table S2: Bulk Density by Field
+This focuses only on field cores, not disturbed cores as that bulk density is contrived. 
+```{r}
+grav_data %>% 
+  filter(disturbed == FALSE) %>% 
+  group_by(field) %>% 
+  summarise_at(
+    vars(bulk_dens), 
+    list(
+      mean_bulk_dens = ~round(mean(., na.rm = TRUE), digits = 2), 
+      se_bulk_dens = ~round(sd(., na.rm = TRUE) / sqrt(n()), digits = 2)
+    )
+  ) %>% 
+  mutate(
+    field_type = recode(field, !!!field_labels),
+    grass_crop = 
+      if_else(
+        field_type %in% c("Riparian Grassland", "Native Grassland"), 
+        "grass", 
+        "crop"
+      )
+  ) %>% 
+  select(grass_crop, field_type, field, mean_bulk_dens, se_bulk_dens) %>% 
+  arrange(grass_crop, field_type, field) %>% 
+  knitr::kable()
+
+```
+
 
 ### Table 1: Texture
 ```{r}

@@ -373,6 +373,51 @@ grav_data %>%
 | crop        |         1.156066 |      0.0118193 |
 | grass       |         1.325178 |      0.0141460 |
 
+### Table S2: Bulk Density by Field
+
+This focuses only on field cores, not disturbed cores as that bulk
+density is contrived.
+
+``` r
+grav_data %>% 
+  filter(disturbed == FALSE) %>% 
+  group_by(field) %>% 
+  summarise_at(
+    vars(bulk_dens), 
+    list(
+      mean_bulk_dens = ~round(mean(., na.rm = TRUE), digits = 2), 
+      se_bulk_dens = ~round(sd(., na.rm = TRUE) / sqrt(n()), digits = 2)
+    )
+  ) %>% 
+  mutate(
+    field_type = recode(field, !!!field_labels),
+    grass_crop = 
+      if_else(
+        field_type %in% c("Riparian Grassland", "Native Grassland"), 
+        "grass", 
+        "crop"
+      )
+  ) %>% 
+  select(grass_crop, field_type, field, mean_bulk_dens, se_bulk_dens) %>% 
+  arrange(grass_crop, field_type, field) %>% 
+  knitr::kable()
+```
+
+| grass\_crop | field\_type        | field | mean\_bulk\_dens | se\_bulk\_dens |
+| :---------- | :----------------- | :---- | ---------------: | -------------: |
+| crop        | Wheat/Cover        | 1-6   |             1.16 |           0.02 |
+| crop        | Wheat/Cover        | 3-8   |             1.19 |           0.02 |
+| crop        | Wheat/Cover        | 7-3   |             1.12 |           0.04 |
+| crop        | Wheat/Fallow       | 1-7   |             1.13 |           0.02 |
+| crop        | Wheat/Fallow       | 4-9   |             1.24 |           0.02 |
+| crop        | Wheat/Fallow       | 8-3   |             1.10 |           0.03 |
+| grass       | Native Grassland   | 3-6   |             1.31 |           0.03 |
+| grass       | Native Grassland   | 7-1   |             1.31 |           0.04 |
+| grass       | Native Grassland   | 8-6   |             1.42 |           0.03 |
+| grass       | Riparian Grassland | RG-1  |             1.35 |           0.02 |
+| grass       | Riparian Grassland | RG-2  |             1.28 |           0.03 |
+| grass       | Riparian Grassland | RG-3  |             1.29 |           0.05 |
+
 ### Table 1: Texture
 
 ``` r
@@ -432,7 +477,7 @@ doc %>%
   scale_x_continuous(limits = c(0, 250))
 ```
 
-![](OtherAnalyses_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
+![](OtherAnalyses_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
 
 ``` r
 doc %>% 
@@ -517,4 +562,4 @@ doc %>%
   )
 ```
 
-![](OtherAnalyses_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
+![](OtherAnalyses_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
