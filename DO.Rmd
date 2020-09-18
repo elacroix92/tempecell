@@ -1,8 +1,11 @@
 ---
 title: "Oxygen Analysis & Figures - Biogeochem. 2020"
 author: "Emily Lacroix"
-date: "4/15/2020"
-output: github_document
+date: "8/28/2020"
+output: 
+  github_document:
+    toc: true
+  
 ---
 
 ```{r knitr setup, include=FALSE}
@@ -237,8 +240,13 @@ do %>%
 ```
 
 ### Figure S4: Boxplot of DO by disturbance and moisture
-```{r Fig S4}
-do %>% 
+
+#### Calculate mean DO by pore, separated by moisture class
+
+```{r DO means by moisture and pore size}
+
+average_do_by_pore_moisture <- 
+  do %>% 
   mutate(
     tillage = 
       case_when(
@@ -272,17 +280,76 @@ do %>%
     vars(pressure),
     ~ factor(
       .,
+      levels = c(100, 300, 500),
+      ordered = TRUE
+    )
+  ) %>%
+  group_by(pressure, AMC) %>% 
+  summarise(
+    mean_do = mean(adj_do, na.rm = TRUE),
+    se_do = sd(adj_do, na.rm = TRUE)/sqrt(n())
+  ) 
+
+
+```
+
+```{r Fig S4}
+do %>% 
+  mutate(
+    tillage = 
+      case_when(
+        crop_type %in% c("Wheat/Fallow", "Wheat/Cover") ~ "Tilled Cropland",
+        crop_type %in% c("Native Grassland", "Riparian Grassland") & 
+          disturbed == FALSE ~ "Undisturbed Grassland",
+        crop_type %in% c("Native Grassland", "Riparian Grassland") & 
+          disturbed == TRUE ~ "Sieved & Re-packed Grassland",
+      )
+  ) %>% 
+  mutate_at(
+    vars(tillage),
+    ~ factor(
+      ., 
+      levels = 
+        c(
+          "Undisturbed Grassland", 
+          "Tilled Cropland", 
+          "Sieved & Re-packed Grassland" 
+        ),
+      labels = 
+        c(
+          "Undisturbed Grassland", 
+          "Tilled Cropland",
+          "Sieved Grassland"
+        )
+      )
+  ) %>% 
+  drop_na(pressure) %>% 
+  mutate_at(
+    vars(pressure),
+    ~ factor(
+      .,
       levels = c(100, 300, 500), 
       ordered = TRUE 
     )
   ) %>% 
   ggplot(aes(x = pressure, y = adj_do)) + 
-  geom_hline(aes(yintercept = 283), linetype = 2, color = "darkred") +
-  geom_hline(aes(yintercept = 15), linetype = 2, color = "darkred") +
+  geom_hline(aes(yintercept = 283), linetype = 2, color = "darkgrey") +
+  geom_hline(aes(yintercept = 15), linetype = 2, color = "darkgrey") +
   geom_boxplot(
     aes(fill = tillage), 
     position = position_dodge(0.8),
     color = "black"
+  ) +
+  geom_pointrange(
+    data = average_do_by_pore_moisture,
+    aes(
+      x = pressure,
+      y = mean_do,
+      ymin = mean_do - se_do,
+      ymax = mean_do + se_do
+    ),
+    color = "darkred",
+    alpha = 0.8
   ) +
   scale_fill_brewer(palette = "Greys") + 
   scale_x_discrete(
@@ -303,9 +370,10 @@ do %>%
   ) +
   theme_bw() + 
   theme(
-    legend.position = "right",
-    legend.text = element_text(margin = margin(b = 2, t = 2, unit = "pt")),
-    axis.ticks.x = element_line(color = "grey92")
+    legend.position = "none",
+    axis.ticks.x = element_line(color = "grey92"),
+    aspect.ratio = 0.5,
+    panel.grid = element_blank()
   ) + 
   labs(
     fill = "Degree of \nDisturbance",
@@ -313,14 +381,14 @@ do %>%
     x = "Effective Pore Diameter"
   ) 
 
-
 ```
 
 
 ### Figure 3: Boxplot of DO by disturbance, averaged across moisture classes
 
-__Calculate the means for each pore size__
-```{r}
+#### Calculate the means for each pore size
+
+```{r DO means by pore size}
 average_do_by_pore <- 
   do %>% 
   mutate(
@@ -371,6 +439,7 @@ average_do_by_pore <-
 ```{r}
 average_do_by_pore %>% knitr::kable()
 ```
+
 
 __Plot__
 ```{r Fig 3}
@@ -458,7 +527,6 @@ do %>%
 
 
 ```
-
 
 ### Figure 4: DO concentration over time
 ```{r Figure 4}
@@ -581,8 +649,136 @@ leveneTest(
 ```
 The variances amongst the tillage x pressure groups are unequal. 
 
+### Pairwise Wilcoxon Rank Sum Test
 
-### GLM fits - adj_do
+#### Table S6: DO Across Pore Sizes 
+
+```{r Table S6}
+
+pairwise.wilcox.test(
+  x = do$adj_do,
+  g = do$pressure,
+  p.adjust.method = "BH",
+  paired = FALSE
+)
+
+```
+
+NOTE - result is the same when analysis is performed when re-doing the analysis on only a subset of the samples that had paired observations across pore sizes (paired = TRUE). See below:
+
+```{r}
+
+paired_do <-
+  do %>% 
+  pivot_wider(
+    id_cols = c(field, incubated_days, moisture, disturbed),
+    names_from = c(pressure),
+    values_from = c(adj_do)
+  ) %>% 
+  filter_at(vars(`100`, `300`, `500`), all_vars(!is.na(.))) %>% 
+  pivot_longer(
+    cols = c(`100`, `300`, `500`), 
+    names_to = "pressure", 
+    values_to = "adj_do"
+  )
+
+pairwise.wilcox.test(
+  x = paired_do$adj_do,
+  g = paired_do$pressure,
+  p.adjust.method = "BH",
+  paired = TRUE
+)
+ 
+```
+
+
+#### Table S6: DO Across Disturbance Treatments by Pore Size
+
+__Largest pores__
+```{r Largest pores}
+largest_pore_do <- 
+  do %>% 
+  filter(pressure == 100)
+
+pairwise.wilcox.test(
+  x = largest_pore_do$adj_do,
+  g = largest_pore_do$tillage,
+  p.adjust.method = "BH",
+  paired = FALSE
+)
+
+```
+
+
+__Medial pores__
+
+```{r Medium pores}
+medium_pore_do <- 
+  do %>% 
+  filter(pressure == 300)
+
+pairwise.wilcox.test(
+  x = medium_pore_do$adj_do,
+  g = medium_pore_do$tillage,
+  p.adjust.method = "BH",
+  paired = FALSE
+)
+
+```
+
+
+__Smallest pores__
+```{r Smallest pores}
+smallest_pore_do <- 
+  do %>% 
+  filter(pressure == 500)
+
+pairwise.wilcox.test(
+  x = smallest_pore_do$adj_do,
+  g = smallest_pore_do$tillage,
+  p.adjust.method = "BH",
+  paired = FALSE
+)
+
+```
+
+#### Table S7: Across Pore Sizes, Separated by Moisture Class
+
+__Table S7: <80% WFPS__
+
+```{r Table S7, Drier Soils}
+
+drier_pore_do <- 
+  do %>% 
+  filter(AMC == "low")
+
+pairwise.wilcox.test(
+  x = drier_pore_do$adj_do,
+  g = drier_pore_do$pressure,
+  p.adjust.method = "BH",
+  paired = FALSE
+)
+
+```
+
+__Table S7: >80% WFPS__
+
+```{r Table S7, Wetter Soils}
+wetter_pore_do <- 
+  do %>% 
+  filter(AMC == "high")
+
+pairwise.wilcox.test(
+  x = wetter_pore_do$adj_do,
+  g = wetter_pore_do$pressure,
+  p.adjust.method = "BH",
+  paired = FALSE
+)
+
+```
+
+
+### GLMM fits 
 
 Create a dataframe with unique observation identifiers to use in GLMMs
 ```{r make do_core_id}
@@ -643,8 +839,6 @@ glmmPQL_overall %>%
   summary()
 
 ```
-
-
 
 #### GLMM for > 3.0 um
 ```{r Table 2: > 3 um, results="hide", message=FALSE}
@@ -709,10 +903,29 @@ glmmPQL_do500 <-
   )
 
 ```
+
 ```{r}
 glmmPQL_do500 %>% summary()
 ```
 
+#### ESM GLMM - Interactions
+```{r }
+glmmPQL_esm <-
+  glmmPQL(
+    adj_do ~ tillage * pressure + bulk_dens * wfps + incubated_days,
+    random = list(field = ~1, core_id = ~1),
+    family = quasipoisson(link = "log"),
+    data = 
+      do_core_id %>% 
+      ungroup() %>% 
+      mutate_at(vars(adj_do), as.integer) %>% 
+      mutate_at(vars(pressure, field), as.factor)
+  )
 
+```
 
+```{r}
+glmmPQL_esm %>% summary()
+
+```
 

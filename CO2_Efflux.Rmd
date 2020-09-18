@@ -1,8 +1,10 @@
 ---
 title: "GHG Analysis & Figures"
 author: "Emily Lacroix"
-date: "4/16/2020"
-output: github_document
+date: "09/01/2020"
+output: 
+  github_document:
+    toc: true
 ---
 
 ```{r setup, include=FALSE}
@@ -230,7 +232,8 @@ __Averaged by WFPS__
 cumulative_co2_produced %>% 
   group_by(AMC) %>% 
   summarise(
-    avg_cumulative_g_co2_norm = mean(cumulative_g_co2_norm, na.rm = TRUE)
+    avg_cumulative_g_co2_norm = mean(cumulative_g_co2_norm, na.rm = TRUE),
+    se_cumulative_g_co2_norm = sqrt(sum(se_g_co2_norm^2)) / n()
   ) %>% 
   knitr::kable()
 
@@ -241,8 +244,10 @@ __Averaged by disturbance__
 cumulative_co2_produced %>% 
   group_by(tillage) %>% 
   summarise(
-    avg_cumulative_g_co2_norm = mean(cumulative_g_co2_norm, na.rm = TRUE)
-  ) 
+    avg_cumulative_g_co2_norm = mean(cumulative_g_co2_norm, na.rm = TRUE),
+    se_cumulative_g_co2_norm = sqrt(sum(se_g_co2_norm^2)) / n()
+  ) %>% 
+  knitr::kable()
 ```
 
 ## Figures 
@@ -338,6 +343,5 @@ ghg_means_normalized %>%
   ) 
 
 ```
-
 
 

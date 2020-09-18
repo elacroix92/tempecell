@@ -2,7 +2,9 @@
 title: "Fe & Mn Analysis & Figures"
 author: "Rob Rossi"
 date: "4/16/2020"
-output: github_document
+output: 
+  github_document:
+    toc: true
 ---
 
 ```{r setup, include=FALSE}

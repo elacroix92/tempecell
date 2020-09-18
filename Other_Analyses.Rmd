@@ -1,8 +1,10 @@
 ---
 title: "Ancillary Analyses"
 author: "Emily Lacroix"
-date: "4/16/2020"
-output: github_document
+date: "8/21/2020"
+output: 
+  github_document:
+    toc: true
 ---
 
 ```{r setup, include=FALSE}
@@ -71,13 +73,6 @@ ph <-
 
 ```
 
-### XRF (total Fe & Mn) data
-```{r}
-xrf <-
-  data_file %>% 
-  read_excel(sheet = "XRF")
-
-```
 
 ### Gravimetric data
 ```{r}
@@ -160,6 +155,29 @@ tc_stats <-
   
 ```
 
+```{r}
+tc_stats
+```
+
+
+```{r}
+tc_stats %>% 
+  group_by(grass_crop) %>% 
+  ggplot(aes(x = perc_c, fill = grass_crop)) + 
+  geom_density(alpha = 0.5) + 
+  scale_x_continuous() + 
+  theme_bw()
+```
+
+```{r}
+tc_stats %>% 
+  group_by(grass_crop) %>% 
+  ggplot(aes(x = perc_n, fill = grass_crop)) + 
+  geom_density(alpha = 0.5) + 
+  scale_x_continuous() + 
+  theme_bw()
+```
+
 
 ```{r}
 
@@ -171,12 +189,56 @@ tc_stats %>%
   )
 
 ```
-The grassland data are not normally distributed. Checking for equal variances. 
+
+```{r}
+tc_stats %>% 
+  group_by(grass_crop) %>% 
+  summarise(
+    normality_shapiro_p_oc = shapiro.test(sqrt(perc_c))$p.value,
+    normality_shapiro_p_tn = shapiro.test(sqrt(perc_n))$p.value,
+  )
+```
+```{r}
+tc_stats %>% 
+  group_by(grass_crop) %>% 
+  summarise(
+    normality_shapiro_p_oc = shapiro.test(perc_c^-3)$p.value,
+    normality_shapiro_p_tn = shapiro.test(perc_n^-3)$p.value,
+  )
+```
+
+```{r}
+tc_stats %>% 
+  group_by(grass_crop) %>% 
+  summarise(
+    normality_shapiro_p_oc = shapiro.test(log(perc_c))$p.value,
+    normality_shapiro_p_tn = shapiro.test(log(perc_n))$p.value,
+  )
+```
+
+
+The grassland data are not normally distributed. Log, sqrt, and cube root transofrmations still fail to meet the assumptions for normality. Checking for equal variances. 
 
 ```{r}
 leveneTest(perc_c ~ grass_crop, data = tc_stats)
 leveneTest(perc_n ~ grass_crop, data = tc_stats)
 ```
+Variances are not equal. 
+
+```{r}
+wilcox.test(
+  tc_stats$perc_c ~ tc_stats$grass_crop, 
+  paired = FALSE
+)
+```
+
+```{r}
+wilcox.test(
+  tc_stats$perc_n ~ tc_stats$grass_crop, 
+  paired = FALSE
+)
+```
+
 
 ### Table 1: pH
 ```{r}
@@ -240,38 +302,13 @@ The crop data are non-normal
 ```{r}
 leveneTest(pH ~ grass_crop, data = ph_stats)
 ```
-The variances are equal. Use Wilcoxon signed-rank test. 
+The variances are equal. Use Wilcoxon rank-sum (Mann Whitney U) test. 
 
 ```{r}
-pairwise.wilcox.test(
-  x = ph_stats$pH, 
-  g = ph_stats$grass_crop, 
-  p.adjust.method = "none", 
+wilcox.test(
+  ph_stats$pH ~ ph_stats$grass_crop, 
   paired = FALSE
 )
-```
-
-
-### Table 1: Fe and Mn Content
-
-For these data, we assume that soils across the grassland and cropland treatments have approximately equal elemental composition
-```{r}
-xrf %>% 
-  summarise_at(
-    vars(mn_ug_per_g, fe_ug_per_g), 
-    list(
-      mean = ~mean(., na.rm = TRUE),
-      se =  ~sd(., na.rm = TRUE) / sqrt(n())
-    )
-  ) %>% 
-  mutate(
-    perc_fe = fe_ug_per_g_mean / 10^6 * 100, #unit converison
-    se_perc_fe = fe_ug_per_g_se / 10^6 * 100, # unit conversion 
-    mn_mg_kg = mn_ug_per_g_mean, # same values after unit conversion
-    se_mn_mg_kg = mn_ug_per_g_se #same values after unit conversion
-  ) %>% 
-  select(perc_fe, se_perc_fe, mn_mg_kg, se_mn_mg_kg) %>% 
-  knitr::kable()
 ```
 
 ### Table 1: Bulk Density
@@ -303,34 +340,59 @@ grav_data %>%
 
 ```
 
-### Table S2: Bulk Density by Field
-This focuses only on field cores, not disturbed cores as that bulk density is contrived. 
+### Bulk Density Stats
 ```{r}
-grav_data %>% 
-  filter(disturbed == FALSE) %>% 
-  group_by(field) %>% 
-  summarise_at(
-    vars(bulk_dens), 
-    list(
-      mean_bulk_dens = ~round(mean(., na.rm = TRUE), digits = 2), 
-      se_bulk_dens = ~round(sd(., na.rm = TRUE) / sqrt(n()), digits = 2)
-    )
+bulk_dens_stats <- 
+  grav_data %>% 
+  mutate_at(
+    vars(field),
+    ~ recode(., !!!field_labels)
   ) %>% 
+  filter(disturbed == FALSE) %>% 
   mutate(
-    field_type = recode(field, !!!field_labels),
     grass_crop = 
       if_else(
-        field_type %in% c("Riparian Grassland", "Native Grassland"), 
+        field %in% c("Riparian Grassland", "Native Grassland"), 
         "grass", 
         "crop"
       )
-  ) %>% 
-  select(grass_crop, field_type, field, mean_bulk_dens, se_bulk_dens) %>% 
-  arrange(grass_crop, field_type, field) %>% 
-  knitr::kable()
+  ) 
 
 ```
+```{r}
+bulk_dens_stats %>% 
+  group_by(grass_crop) %>% 
+  ggplot(aes(x = bulk_dens, fill = grass_crop)) + 
+  geom_histogram() +
+  #geom_density(alpha = 0.5) + 
+  scale_x_continuous() + 
+  theme_bw()
+```
 
+Test for normality 
+```{r}
+bulk_dens_stats %>% 
+  group_by(grass_crop) %>% 
+  summarise(
+    normality_p_val = shapiro.test(bulk_dens)$p.value
+  )
+```
+
+
+Test for equal variances
+```{r}
+leveneTest(bulk_dens ~ grass_crop, data = bulk_dens_stats)
+```
+
+Variances are equal. 
+
+Wilcoxon Rank Sum Test
+```{r}
+wilcox.test(
+  bulk_dens_stats$bulk_dens ~ bulk_dens_stats$grass_crop, 
+  paired = FALSE
+)
+```
 
 ### Table 1: Texture
 ```{r}
@@ -363,13 +425,99 @@ texture %>%
 
 ```
 
+### Texture Stats
+
+```{r}
+texture_stats <- 
+  texture %>% 
+    mutate(
+    grass_crop = 
+      case_when(
+        str_detect(sample, "^(WF|WC|CW)") ~ "crop",
+        str_detect(sample, "^(NG|RG)") ~ "grass"
+      )
+  )
+```
+
+```{r}
+texture_stats %>%  
+  group_by(grass_crop) %>% 
+  ggplot(aes(x = perc_sand, fill = grass_crop)) + 
+  geom_density(alpha = 0.5) + 
+  scale_x_continuous() + 
+  theme_bw()
+
+```
+
+```{r}
+texture %>% 
+    mutate(
+    grass_crop = 
+      case_when(
+        str_detect(sample, "^(WF|WC|CW)") ~ "crop",
+        str_detect(sample, "^(NG|RG)") ~ "grass"
+      )
+  ) %>% 
+  group_by(grass_crop) %>% 
+  ggplot(aes(x = perc_silt, fill = grass_crop)) + 
+  geom_density(alpha = 0.5) + 
+  scale_x_continuous() + 
+  theme_bw()
+```
+
+
+```{r}
+texture_stats %>% 
+  group_by(grass_crop) %>% 
+  ggplot(aes(x = perc_clay, fill = grass_crop)) + 
+  geom_density(alpha = 0.5) + 
+  scale_x_continuous() + 
+  theme_bw()
+```
+
+```{r}
+texture_stats %>% 
+  group_by(grass_crop) %>% 
+  summarise(
+    normality_p_val_sand = shapiro.test(perc_sand)$p.value,
+    normality_p_val_silt = shapiro.test(perc_silt)$p.value,
+    normality_p_val_clay = shapiro.test(perc_clay)$p.value
+  )
+
+```
+```{r}
+leveneTest(perc_sand ~ grass_crop, data = texture_stats) #unequal variances
+leveneTest(perc_silt ~ grass_crop, data = texture_stats) #equal variances
+leveneTest(perc_clay ~ grass_crop, data = texture_stats) #unequal variances
+```
+
+Wilcoxon Rank Sum Test
+```{r}
+wilcox.test(
+  texture_stats$perc_sand ~ texture_stats$grass_crop, 
+  paired = FALSE
+)
+
+wilcox.test(
+  texture_stats$perc_silt ~ texture_stats$grass_crop, 
+  paired = FALSE
+)
+
+wilcox.test(
+  texture_stats$perc_clay ~ texture_stats$grass_crop, 
+  paired = FALSE
+)
+```
 
 ### DOC means 
 ```{r}
 
 doc %>% 
   group_by(disturbed) %>% 
-  summarise(mean_doc = mean(blank_corrected_mg_l, na.rm = TRUE)) %>% 
+  summarise(
+    mean_doc = mean(blank_corrected_mg_l, na.rm = TRUE),
+    se_doc = sd(blank_corrected_mg_l, na.rm = TRUE) / sqrt(n())
+  ) %>% 
   knitr::kable()
   
 

@@ -1,7 +1,7 @@
 README
 ================
 Emily Lacroix
-7/3/2020
+9/18/2020
 
 This repo contains the code and data to reproduce all results and
 figures in the 2020 Biogeochemistry publication: **Effects of Moisture
@@ -17,12 +17,11 @@ Each RMarkdown file regenerates all results and figures used in the
 manuscript. The `.md` files in this repo show formatted code output. The
 `.Rmd` files can be downloaded to run and edit on your lcoal machine.
 
-`DO_publication_scriptv3.md` shows data processing for DO data.
-`FeMnAnalysis_v2.md` shows data processing for Fe and Mn reduction.
-`GHG_publication_figures_v2.md` shows data processing for CO2 flux data.
-`PorVolumeProcessing_v2.md` shows data processing for pore volume
-analysis. `OtherAnalyses.md` shows data processing for ancillary data
-such as dissolved organic carbon, pH, etc.
+`DO.md` shows data processing for DO data. `FeMn.md` shows data
+processing for Fe and Mn reduction. `CO2_Efflux.md` shows data
+processing for CO2 flux data. `Pore_Volume.md` shows data processing for
+pore volume analysis. `Other_Analyses.md` shows data processing for
+ancillary data such as dissolved organic carbon, pH, etc.
 
 Please contact the corresponding author(s) with questions or enhanced
 access.
