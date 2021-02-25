@@ -19,14 +19,13 @@ Emily Lacroix
     -   [Table S5: Pairwise Wilcoxon rank sum test for percent pore
         volumes](#table-s5-pairwise-wilcoxon-rank-sum-test-for-percent-pore-volumes)
 -   [Figures & Tables](#figures-tables)
-    -   [Table S2: Mean and SEMs by pore size and
-        disturbance](#table-s2-mean-and-sems-by-pore-size-and-disturbance)
     -   [Section 3.2: Average pores &lt; 0.6
         micron](#section-3.2-average-pores-0.6-micron)
     -   [Figure 1. Percent Pore Volume](#figure-1.-percent-pore-volume)
+    -   [Table S7: Total Water Extracted by Moisture and
+        Disturbance](#table-s7-total-water-extracted-by-moisture-and-disturbance)
 
-Set-Up
-------
+## Set-Up
 
 ### Load libraries
 
@@ -55,8 +54,7 @@ Set-Up
       ) %>% 
       unnest()
 
-Import & Clean Data
--------------------
+## Import & Clean Data
 
 ### Import
 
@@ -117,8 +115,7 @@ Read in all of the moisture data with the following filtering:
       ) %>% 
       filter(amount_removed < 5)
 
-Statistics
-----------
+## Statistics
 
 ### Density Plots
 
@@ -217,7 +214,7 @@ Wilcox test to look for differences.
     )
 
     ## 
-    ##  Pairwise comparisons using Wilcoxon rank sum test 
+    ##  Pairwise comparisons using Wilcoxon rank sum exact test 
     ## 
     ## data:  filtered_grav_data$alpha_100 and filtered_grav_data$tillage 
     ## 
@@ -235,7 +232,7 @@ Wilcox test to look for differences.
     )
 
     ## 
-    ##  Pairwise comparisons using Wilcoxon rank sum test 
+    ##  Pairwise comparisons using Wilcoxon rank sum exact test 
     ## 
     ## data:  filtered_grav_data$alpha_300 and filtered_grav_data$tillage 
     ## 
@@ -252,14 +249,14 @@ Wilcox test to look for differences.
       paired = FALSE
     )
 
-    ## Warning in wilcox.test.default(xi, xj, paired = paired, ...): cannot
-    ## compute exact p-value with ties
+    ## Warning in wilcox.test.default(xi, xj, paired = paired, ...): cannot compute
+    ## exact p-value with ties
 
-    ## Warning in wilcox.test.default(xi, xj, paired = paired, ...): cannot
-    ## compute exact p-value with ties
+    ## Warning in wilcox.test.default(xi, xj, paired = paired, ...): cannot compute
+    ## exact p-value with ties
 
     ## 
-    ##  Pairwise comparisons using Wilcoxon rank sum test 
+    ##  Pairwise comparisons using Wilcoxon rank sum test with continuity correction 
     ## 
     ## data:  filtered_grav_data$alpha_500 and filtered_grav_data$tillage 
     ## 
@@ -277,7 +274,7 @@ Wilcox test to look for differences.
     )
 
     ## 
-    ##  Pairwise comparisons using Wilcoxon rank sum test 
+    ##  Pairwise comparisons using Wilcoxon rank sum exact test 
     ## 
     ## data:  filtered_grav_data$alpha_less_than_500 and filtered_grav_data$tillage 
     ## 
@@ -287,92 +284,7 @@ Wilcox test to look for differences.
     ## 
     ## P value adjustment method: BH
 
-Figures & Tables
-----------------
-
-### Table S2: Mean and SEMs by pore size and disturbance
-
-    filtered_grav_data %>% 
-      group_by(tillage) %>%
-      summarise_at(
-        vars(contains("alpha")),
-        list(
-          mean = ~ 100 * mean(., na.rm = TRUE),
-          se = ~ 100 * sd(., na.rm = TRUE)/sqrt(n())
-        )
-      ) %>%
-      select(
-        tillage,
-        alpha_100_mean,
-        alpha_100_se,
-        alpha_300_mean,
-        alpha_300_se,
-        alpha_500_mean,
-        alpha_500_se,
-        alpha_less_than_500_mean,
-        alpha_less_than_500_se
-      ) %>% 
-      mutate(
-        total_pore_proportions = 
-          alpha_100_mean + 
-          alpha_300_mean + 
-          alpha_500_mean + 
-          alpha_less_than_500_mean
-      ) %>% 
-      arrange(rev(tillage)) %>% 
-      mutate_at(vars(starts_with("alpha")), round, digits = 3)
-
-    ## # A tibble: 3 x 10
-    ##   tillage alpha_100_mean alpha_100_se alpha_300_mean alpha_300_se
-    ##   <chr>            <dbl>        <dbl>          <dbl>        <dbl>
-    ## 1 Undist…           22.3         3.29           6.04        1.35 
-    ## 2 Tilled…           34.7         4.49           6.00        0.829
-    ## 3 Distur…           40.7         1.98           4.76        0.576
-    ## # … with 5 more variables: alpha_500_mean <dbl>, alpha_500_se <dbl>,
-    ## #   alpha_less_than_500_mean <dbl>, alpha_less_than_500_se <dbl>,
-    ## #   total_pore_proportions <dbl>
-
-      #knitr::kable()
-
-    filtered_grav_data %>% 
-      group_by(tillage) %>%
-      summarise_at(
-        vars(contains("alpha")),
-        list(
-          mean = ~ mean(., na.rm = TRUE),
-          se = ~ sd(., na.rm = TRUE)/sqrt(n())
-        )
-      ) %>%
-      select(
-        tillage,
-        alpha_100_mean,
-        alpha_100_se,
-        alpha_300_mean,
-        alpha_300_se,
-        alpha_500_mean,
-        alpha_500_se,
-        alpha_less_than_500_mean,
-        alpha_less_than_500_se
-      ) %>% 
-      mutate(
-        total_pore_proportions = 
-          alpha_100_mean + 
-          alpha_300_mean + 
-          alpha_500_mean + 
-          alpha_less_than_500_mean
-      ) %>% 
-      arrange(rev(tillage)) %>% 
-      mutate_at(vars(starts_with("alpha")), round, digits = 4)
-
-    ## # A tibble: 3 x 10
-    ##   tillage alpha_100_mean alpha_100_se alpha_300_mean alpha_300_se
-    ##   <chr>            <dbl>        <dbl>          <dbl>        <dbl>
-    ## 1 Undist…          0.223       0.0329         0.0604      0.0135 
-    ## 2 Tilled…          0.347       0.0448         0.06        0.0083 
-    ## 3 Distur…          0.407       0.0198         0.0476      0.00580
-    ## # … with 5 more variables: alpha_500_mean <dbl>, alpha_500_se <dbl>,
-    ## #   alpha_less_than_500_mean <dbl>, alpha_less_than_500_se <dbl>,
-    ## #   total_pore_proportions <dbl>
+## Figures & Tables
 
 ### Section 3.2: Average pores &lt; 0.6 micron
 
@@ -509,4 +421,51 @@ Figures & Tables
         panel.grid.minor = element_blank()
       ) 
 
-![](Pore_Volume_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+![](Pore_Volume_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+### Table S7: Total Water Extracted by Moisture and Disturbance
+
+      grav_data %>% 
+      filter(!str_detect(sample, "Fe")) %>%
+      drop_na(mw_100, mw_300, mw_500) %>%
+      mutate(
+        water_extracted = mw_100 + mw_300 + mw_500,
+        moisture = if_else(wfps < 0.8, "low", "high")
+      )  %>%
+      left_join(fields, by = c("field" = "fields")) %>%
+      mutate(
+        tillage =
+          case_when(
+            crop_type %in% c("Wheat/Fallow", "Wheat/Cover") ~ "Tilled Cropland",
+            crop_type %in% c("Native Grassland", "Riparian Grassland") &
+              disturbed == FALSE ~ "Undisturbed Grassland",
+            crop_type %in% c("Native Grassland", "Riparian Grassland") &
+              disturbed == TRUE ~ "Disturbed Grassland"
+          )
+      ) %>% 
+      group_by(moisture, tillage) %>% 
+      summarise(
+        mean_total = mean(water_extracted),
+        se_total = sd(water_extracted) / sqrt(n()),
+        mean_100 = mean(mw_100),
+        se_100 = sd(mw_100) / sqrt(n()),
+        mean_300 = mean(mw_300),
+        se_300 = sd(mw_300) / sqrt(n()),
+        mean_500 = mean(mw_500),
+        se_500 = sd(mw_500) / sqrt(n()),
+      ) %>% 
+      arrange(desc(tillage), desc(moisture)) 
+
+    ## `summarise()` regrouping output by 'moisture' (override with `.groups` argument)
+
+    ## # A tibble: 6 x 10
+    ## # Groups:   moisture [2]
+    ##   moisture tillage mean_total se_total mean_100 se_100 mean_300 se_300 mean_500
+    ##   <chr>    <chr>        <dbl>    <dbl>    <dbl>  <dbl>    <dbl>  <dbl>    <dbl>
+    ## 1 low      Undist…       4.70    1.21      2.66  0.937     1.47 0.328     0.570
+    ## 2 high     Undist…       7.42    0.615     5.57  0.571     1.35 0.0917    0.504
+    ## 3 low      Tilled…       9.08    0.631     6.14  0.642     2.20 0.163     0.736
+    ## 4 high     Tilled…      12.0     0.638     9.25  0.553     2.11 0.171     0.689
+    ## 5 low      Distur…       5.22    1.05      3.34  0.749     1.33 0.288     0.552
+    ## 6 high     Distur…       9.88    0.998     8.33  1.02      1.17 0.120     0.388
+    ## # … with 1 more variable: se_500 <dbl>

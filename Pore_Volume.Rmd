@@ -206,75 +206,6 @@ pairwise.wilcox.test(
 
 ## Figures & Tables
 
-### Table S2: Mean and SEMs by pore size and disturbance 
-```{r}
-filtered_grav_data %>% 
-  group_by(tillage) %>%
-  summarise_at(
-    vars(contains("alpha")),
-    list(
-      mean = ~ 100 * mean(., na.rm = TRUE),
-      se = ~ 100 * sd(., na.rm = TRUE)/sqrt(n())
-    )
-  ) %>%
-  select(
-    tillage,
-    alpha_100_mean,
-    alpha_100_se,
-    alpha_300_mean,
-    alpha_300_se,
-    alpha_500_mean,
-    alpha_500_se,
-    alpha_less_than_500_mean,
-    alpha_less_than_500_se
-  ) %>% 
-  mutate(
-    total_pore_proportions = 
-      alpha_100_mean + 
-      alpha_300_mean + 
-      alpha_500_mean + 
-      alpha_less_than_500_mean
-  ) %>% 
-  arrange(rev(tillage)) %>% 
-  mutate_at(vars(starts_with("alpha")), round, digits = 3)
-  #knitr::kable()
-
-```
-
-```{r}
-filtered_grav_data %>% 
-  group_by(tillage) %>%
-  summarise_at(
-    vars(contains("alpha")),
-    list(
-      mean = ~ mean(., na.rm = TRUE),
-      se = ~ sd(., na.rm = TRUE)/sqrt(n())
-    )
-  ) %>%
-  select(
-    tillage,
-    alpha_100_mean,
-    alpha_100_se,
-    alpha_300_mean,
-    alpha_300_se,
-    alpha_500_mean,
-    alpha_500_se,
-    alpha_less_than_500_mean,
-    alpha_less_than_500_se
-  ) %>% 
-  mutate(
-    total_pore_proportions = 
-      alpha_100_mean + 
-      alpha_300_mean + 
-      alpha_500_mean + 
-      alpha_less_than_500_mean
-  ) %>% 
-  arrange(rev(tillage)) %>% 
-  mutate_at(vars(starts_with("alpha")), round, digits = 4)
-```
-
-
-
 ### Section 3.2: Average pores < 0.6 micron
 ```{r}
 filtered_grav_data %>% 
@@ -407,6 +338,42 @@ filtered_grav_data %>%
     panel.grid.major = element_blank(), 
     panel.grid.minor = element_blank()
   ) 
+
+```
+
+### Table S7: Total Water Extracted by Moisture and Disturbance
+```{r}
+  grav_data %>% 
+  filter(!str_detect(sample, "Fe")) %>%
+  drop_na(mw_100, mw_300, mw_500) %>%
+  mutate(
+    water_extracted = mw_100 + mw_300 + mw_500,
+    moisture = if_else(wfps < 0.8, "low", "high")
+  )  %>%
+  left_join(fields, by = c("field" = "fields")) %>%
+  mutate(
+    tillage =
+      case_when(
+        crop_type %in% c("Wheat/Fallow", "Wheat/Cover") ~ "Tilled Cropland",
+        crop_type %in% c("Native Grassland", "Riparian Grassland") &
+          disturbed == FALSE ~ "Undisturbed Grassland",
+        crop_type %in% c("Native Grassland", "Riparian Grassland") &
+          disturbed == TRUE ~ "Disturbed Grassland"
+      )
+  ) %>% 
+  group_by(moisture, tillage) %>% 
+  summarise(
+    mean_total = mean(water_extracted),
+    se_total = sd(water_extracted) / sqrt(n()),
+    mean_100 = mean(mw_100),
+    se_100 = sd(mw_100) / sqrt(n()),
+    mean_300 = mean(mw_300),
+    se_300 = sd(mw_300) / sqrt(n()),
+    mean_500 = mean(mw_500),
+    se_500 = sd(mw_500) / sqrt(n()),
+  ) %>% 
+  arrange(desc(tillage), desc(moisture)) 
+  
 
 ```
 

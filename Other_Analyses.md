@@ -26,8 +26,7 @@ Emily Lacroix
     -   [DOC Stats](#doc-stats)
     -   [Figure S5: DOC Boxplots](#figure-s5-doc-boxplots)
 
-Set-Up
-------
+## Set-Up
 
 ### Load libraries
 
@@ -62,8 +61,7 @@ Set-Up
         "7-1" = "Native Grassland"
       )
 
-Import Data
------------
+## Import Data
 
 ### TC and TN data
 
@@ -103,8 +101,7 @@ Import Data
         disturbed = if_else(str_detect(sample_name, "-D"), TRUE, FALSE)
       )
 
-Figures & Analysis
-------------------
+## Figures & Analysis
 
 ### Table 1: % OC and TN
 
@@ -157,20 +154,20 @@ Figures & Analysis
     tc_stats
 
     ## # A tibble: 51 x 14
-    ##    sample field moisture incubation_day sample_type crop  weight area_n
-    ##    <chr>  <chr> <chr>             <dbl> <chr>       <chr>  <dbl>  <dbl>
-    ##  1 3-8-F… Whea… FC                    7 Fe          Whea…   20.0   22.1
-    ##  2 3-8-7… Whea… 70                   28 Fe          Whea…   20.1   18.5
-    ##  3 3-8-7… Whea… 70                   14 Fe          Whea…   20.1   18.4
-    ##  4 3-8-7… Whea… 70                    7 Fe          Whea…   20.2   18.2
-    ##  5 3-8-F… Whea… FC                   14 Fe          Whea…   19.7   17.0
-    ##  6 3-8-F… Whea… FC                   28 Fe          Whea…   19.1   15.9
-    ##  7 8-6-F… Nati… <NA>                  0 Fe          Nati…   18.4   14.8
-    ##  8 8-6-7… Nati… 70                    7 Fe          Nati…   19.0   14.4
-    ##  9 8-6-7… Nati… 70                   14 Fe          Nati…   19.6   16.8
-    ## 10 8-6-7… Nati… 70                   28 Fe          Nati…   19.4   15.7
-    ## # … with 41 more rows, and 6 more variables: area_c <dbl>, weight_n <dbl>,
-    ## #   weight_c <dbl>, perc_n <dbl>, perc_c <dbl>, grass_crop <chr>
+    ##    sample field moisture incubation_day sample_type crop  weight area_n area_c
+    ##    <chr>  <chr> <chr>             <dbl> <chr>       <chr>  <dbl>  <dbl>  <dbl>
+    ##  1 3-8-F… Whea… FC                    7 Fe          Whea…   20.0   22.1   689.
+    ##  2 3-8-7… Whea… 70                   28 Fe          Whea…   20.1   18.5   597.
+    ##  3 3-8-7… Whea… 70                   14 Fe          Whea…   20.1   18.4   595.
+    ##  4 3-8-7… Whea… 70                    7 Fe          Whea…   20.2   18.2   583.
+    ##  5 3-8-F… Whea… FC                   14 Fe          Whea…   19.7   17.0   569.
+    ##  6 3-8-F… Whea… FC                   28 Fe          Whea…   19.1   15.9   549.
+    ##  7 8-6-F… Nati… <NA>                  0 Fe          Nati…   18.4   14.8   541.
+    ##  8 8-6-7… Nati… 70                    7 Fe          Nati…   19.0   14.4   507.
+    ##  9 8-6-7… Nati… 70                   14 Fe          Nati…   19.6   16.8   557.
+    ## 10 8-6-7… Nati… 70                   28 Fe          Nati…   19.4   15.7   546.
+    ## # … with 41 more rows, and 5 more variables: weight_n <dbl>, weight_c <dbl>,
+    ## #   perc_n <dbl>, perc_c <dbl>, grass_crop <chr>
 
     tc_stats %>% 
       group_by(grass_crop) %>% 
@@ -197,6 +194,8 @@ Figures & Analysis
         normality_shapiro_p_tn = shapiro.test(perc_n)$p.value,
       )
 
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
     ## # A tibble: 2 x 3
     ##   grass_crop normality_shapiro_p_oc normality_shapiro_p_tn
     ##   <chr>                       <dbl>                  <dbl>
@@ -209,6 +208,8 @@ Figures & Analysis
         normality_shapiro_p_oc = shapiro.test(sqrt(perc_c))$p.value,
         normality_shapiro_p_tn = shapiro.test(sqrt(perc_n))$p.value,
       )
+
+    ## `summarise()` ungrouping output (override with `.groups` argument)
 
     ## # A tibble: 2 x 3
     ##   grass_crop normality_shapiro_p_oc normality_shapiro_p_tn
@@ -223,6 +224,8 @@ Figures & Analysis
         normality_shapiro_p_tn = shapiro.test(perc_n^-3)$p.value,
       )
 
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
     ## # A tibble: 2 x 3
     ##   grass_crop normality_shapiro_p_oc normality_shapiro_p_tn
     ##   <chr>                       <dbl>                  <dbl>
@@ -235,6 +238,8 @@ Figures & Analysis
         normality_shapiro_p_oc = shapiro.test(log(perc_c))$p.value,
         normality_shapiro_p_tn = shapiro.test(log(perc_n))$p.value,
       )
+
+    ## `summarise()` ungrouping output (override with `.groups` argument)
 
     ## # A tibble: 2 x 3
     ##   grass_crop normality_shapiro_p_oc normality_shapiro_p_tn
@@ -278,7 +283,7 @@ Variances are not equal.
     )
 
     ## 
-    ##  Wilcoxon rank sum test
+    ##  Wilcoxon rank sum exact test
     ## 
     ## data:  tc_stats$perc_c by tc_stats$grass_crop
     ## W = 189, p-value = 0.009825
@@ -290,7 +295,7 @@ Variances are not equal.
     )
 
     ## 
-    ##  Wilcoxon rank sum test
+    ##  Wilcoxon rank sum exact test
     ## 
     ## data:  tc_stats$perc_n by tc_stats$grass_crop
     ## W = 182, p-value = 0.006497
@@ -349,6 +354,8 @@ Variances are not equal.
       summarise(
         normality_p_val = shapiro.test(pH)$p.value
       )
+
+    ## `summarise()` ungrouping output (override with `.groups` argument)
 
     ## # A tibble: 2 x 2
     ##   grass_crop normality_p_val
@@ -456,6 +463,8 @@ Test for normality
       summarise(
         normality_p_val = shapiro.test(bulk_dens)$p.value
       )
+
+    ## `summarise()` ungrouping output (override with `.groups` argument)
 
     ## # A tibble: 2 x 2
     ##   grass_crop normality_p_val
@@ -581,6 +590,8 @@ Wilcoxon Rank Sum Test
         normality_p_val_clay = shapiro.test(perc_clay)$p.value
       )
 
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
     ## # A tibble: 2 x 4
     ##   grass_crop normality_p_val_sand normality_p_val_silt normality_p_val_clay
     ##   <chr>                     <dbl>                <dbl>                <dbl>
@@ -643,8 +654,8 @@ Wilcoxon Rank Sum Test
       paired = FALSE
     )
 
-    ## Warning in wilcox.test.default(x = c(58.5, 65.9, 61.2, 60, 62.5, 59.7,
-    ## 63, : cannot compute exact p-value with ties
+    ## Warning in wilcox.test.default(x = c(58.5, 65.9, 61.2, 60, 62.5, 59.7, 63, :
+    ## cannot compute exact p-value with ties
 
     ## 
     ##  Wilcoxon rank sum test with continuity correction
@@ -678,6 +689,8 @@ Wilcoxon Rank Sum Test
       ) %>% 
       knitr::kable()
 
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
 | disturbed | mean\_doc |   se\_doc |
 |:----------|----------:|----------:|
 | FALSE     |  24.32253 |  2.423394 |
@@ -697,6 +710,8 @@ Wilcoxon Rank Sum Test
       summarise(
         normality_p = shapiro.test(blank_corrected_mg_l)$p.value
       )
+
+    ## `summarise()` ungrouping output (override with `.groups` argument)
 
     ## # A tibble: 2 x 2
     ##   disturbed normality_p

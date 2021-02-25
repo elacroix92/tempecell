@@ -1,12 +1,12 @@
 README
 ================
 Emily Lacroix
-9/18/2020
+2/25/2021
 
 This repo contains the code and data to reproduce all results and
-figures in the 2020 Biogeochemistry publication: **Effects of Moisture
-and Physical Disturbance on Pore-Scale Oxygen Content and Anaerobic
-Metabolisms in Upland Soils**.
+figures in the 2021 Science of the Total Environment publication:
+**Effects of Moisture and Physical Disturbance on Pore-Scale Oxygen
+Content and Anaerobic Metabolisms in Upland Soils**.
 
 `TempeCell_MasterSpreadsheet.xlsx` contains all of the data used in
 analyses as well as a README tab explaining data types and units. The R

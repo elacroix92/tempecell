@@ -30,8 +30,7 @@ Emily Lacroix
         Test](#pairwise-wilcoxon-rank-sum-test)
     -   [GLMM fits](#glmm-fits)
 
-Set-Up
-------
+## Set-Up
 
 ### Load libraries
 
@@ -64,8 +63,7 @@ Set-Up
 
     moisture_label <- c("low" = "< 80 % WFPS", "high" = "> 80 % WFPS")
 
-Import & Clean Data
--------------------
+## Import & Clean Data
 
 ### Import data
 
@@ -152,8 +150,7 @@ This code:
       ) %>% 
       drop_na(pressure)
 
-Figures & Tables
-----------------
+## Figures & Tables
 
 ### Table 3: Oxygen Consumed
 
@@ -170,6 +167,8 @@ Figures & Tables
         ~ round(., digits = 3)
       ) %>% 
       knitr::kable()
+
+    ## `summarise()` regrouping output by 'pressure' (override with `.groups` argument)
 
 | pressure | tillage                      | mean\_umol\_consumed | se\_umol\_consumed |
 |---------:|:-----------------------------|---------------------:|-------------------:|
@@ -246,6 +245,8 @@ Figures & Tables
       mutate_at(vars(mean, se), round, digits = 4) %>% 
       knitr::kable()
 
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
 | tillage                      | pressure |   mean |     se |
 |:-----------------------------|:---------|-------:|-------:|
 | Sieved & Re-packed Grassland | 100      | 0.9090 | 0.0209 |
@@ -306,6 +307,8 @@ Figures & Tables
         mean_do = mean(adj_do, na.rm = TRUE),
         se_do = sd(adj_do, na.rm = TRUE)/sqrt(n())
       ) 
+
+    ## `summarise()` regrouping output by 'pressure' (override with `.groups` argument)
 
     do %>% 
       mutate(
@@ -444,6 +447,8 @@ Figures & Tables
         mean_do = mean(adj_do, na.rm = TRUE),
         se_do = sd(adj_do, na.rm = TRUE)/sqrt(n())
       ) 
+
+    ## `summarise()` ungrouping output (override with `.groups` argument)
 
     average_do_by_pore %>% knitr::kable()
 
@@ -607,12 +612,11 @@ Figures & Tables
         legend.title = element_text(size = 8, face = "bold", color = "black"),
       ) 
 
-    ## Warning: Removed 1 rows containing missing values (geom_errorbar).
+    ## `summarise()` regrouping output by 'incubated_days', 'pressure' (override with `.groups` argument)
 
 ![](DO_files/figure-gfm/Figure%204-1.png)<!-- -->
 
-Statistics
-----------
+## Statistics
 
 ### Sample Sizes (N)
 
@@ -623,6 +627,8 @@ Statistics
         n = n()
       ) %>% 
       knitr::kable()
+
+    ## `summarise()` regrouping output by 'pressure', 'tillage' (override with `.groups` argument)
 
 | pressure | tillage                      | incubated\_days |   n |
 |---------:|:-----------------------------|----------------:|----:|
@@ -675,6 +681,8 @@ Statistics
       ) %>% 
       knitr::kable()
 
+    ## `summarise()` regrouping output by 'tillage' (override with `.groups` argument)
+
 | tillage                      | pressure | normality\_stat | normality\_p\_value |
 |:-----------------------------|---------:|----------------:|--------------------:|
 | Sieved & Re-packed Grassland |      100 |       0.8193964 |           0.0003834 |
@@ -708,7 +716,7 @@ The variances amongst the tillage x pressure groups are unequal.
 
 ### Pairwise Wilcoxon Rank Sum Test
 
-#### Table S6: DO Across Pore Sizes
+#### Table S5: DO Across Pore Sizes
 
     pairwise.wilcox.test(
       x = do$adj_do,
@@ -718,7 +726,7 @@ The variances amongst the tillage x pressure groups are unequal.
     )
 
     ## 
-    ##  Pairwise comparisons using Wilcoxon rank sum test 
+    ##  Pairwise comparisons using Wilcoxon rank sum test with continuity correction 
     ## 
     ## data:  do$adj_do and do$pressure 
     ## 
@@ -754,7 +762,7 @@ across pore sizes (paired = TRUE). See below:
     )
 
     ## 
-    ##  Pairwise comparisons using Wilcoxon signed rank test 
+    ##  Pairwise comparisons using Wilcoxon signed rank test with continuity correction 
     ## 
     ## data:  paired_do$adj_do and paired_do$pressure 
     ## 
@@ -764,7 +772,7 @@ across pore sizes (paired = TRUE). See below:
     ## 
     ## P value adjustment method: BH
 
-#### Table S6: DO Across Disturbance Treatments by Pore Size
+#### Table S5: DO Across Disturbance Treatments by Pore Size
 
 **Largest pores**
 
@@ -779,17 +787,17 @@ across pore sizes (paired = TRUE). See below:
       paired = FALSE
     )
 
-    ## Warning in wilcox.test.default(xi, xj, paired = paired, ...): cannot
-    ## compute exact p-value with ties
+    ## Warning in wilcox.test.default(xi, xj, paired = paired, ...): cannot compute
+    ## exact p-value with ties
 
-    ## Warning in wilcox.test.default(xi, xj, paired = paired, ...): cannot
-    ## compute exact p-value with ties
+    ## Warning in wilcox.test.default(xi, xj, paired = paired, ...): cannot compute
+    ## exact p-value with ties
 
-    ## Warning in wilcox.test.default(xi, xj, paired = paired, ...): cannot
-    ## compute exact p-value with ties
+    ## Warning in wilcox.test.default(xi, xj, paired = paired, ...): cannot compute
+    ## exact p-value with ties
 
     ## 
-    ##  Pairwise comparisons using Wilcoxon rank sum test 
+    ##  Pairwise comparisons using Wilcoxon rank sum test with continuity correction 
     ## 
     ## data:  largest_pore_do$adj_do and largest_pore_do$tillage 
     ## 
@@ -812,17 +820,17 @@ across pore sizes (paired = TRUE). See below:
       paired = FALSE
     )
 
-    ## Warning in wilcox.test.default(xi, xj, paired = paired, ...): cannot
-    ## compute exact p-value with ties
+    ## Warning in wilcox.test.default(xi, xj, paired = paired, ...): cannot compute
+    ## exact p-value with ties
 
-    ## Warning in wilcox.test.default(xi, xj, paired = paired, ...): cannot
-    ## compute exact p-value with ties
+    ## Warning in wilcox.test.default(xi, xj, paired = paired, ...): cannot compute
+    ## exact p-value with ties
 
-    ## Warning in wilcox.test.default(xi, xj, paired = paired, ...): cannot
-    ## compute exact p-value with ties
+    ## Warning in wilcox.test.default(xi, xj, paired = paired, ...): cannot compute
+    ## exact p-value with ties
 
     ## 
-    ##  Pairwise comparisons using Wilcoxon rank sum test 
+    ##  Pairwise comparisons using Wilcoxon rank sum test with continuity correction 
     ## 
     ## data:  medium_pore_do$adj_do and medium_pore_do$tillage 
     ## 
@@ -845,14 +853,14 @@ across pore sizes (paired = TRUE). See below:
       paired = FALSE
     )
 
-    ## Warning in wilcox.test.default(xi, xj, paired = paired, ...): cannot
-    ## compute exact p-value with ties
+    ## Warning in wilcox.test.default(xi, xj, paired = paired, ...): cannot compute
+    ## exact p-value with ties
 
-    ## Warning in wilcox.test.default(xi, xj, paired = paired, ...): cannot
-    ## compute exact p-value with ties
+    ## Warning in wilcox.test.default(xi, xj, paired = paired, ...): cannot compute
+    ## exact p-value with ties
 
     ## 
-    ##  Pairwise comparisons using Wilcoxon rank sum test 
+    ##  Pairwise comparisons using Wilcoxon rank sum exact test 
     ## 
     ## data:  smallest_pore_do$adj_do and smallest_pore_do$tillage 
     ## 
@@ -864,7 +872,7 @@ across pore sizes (paired = TRUE). See below:
 
 #### Table S7: Across Pore Sizes, Separated by Moisture Class
 
-**Table S7: &lt;80% WFPS**
+**Table S6: &lt;80% WFPS**
 
     drier_pore_do <- 
       do %>% 
@@ -877,17 +885,17 @@ across pore sizes (paired = TRUE). See below:
       paired = FALSE
     )
 
-    ## Warning in wilcox.test.default(xi, xj, paired = paired, ...): cannot
-    ## compute exact p-value with ties
+    ## Warning in wilcox.test.default(xi, xj, paired = paired, ...): cannot compute
+    ## exact p-value with ties
 
-    ## Warning in wilcox.test.default(xi, xj, paired = paired, ...): cannot
-    ## compute exact p-value with ties
+    ## Warning in wilcox.test.default(xi, xj, paired = paired, ...): cannot compute
+    ## exact p-value with ties
 
-    ## Warning in wilcox.test.default(xi, xj, paired = paired, ...): cannot
-    ## compute exact p-value with ties
+    ## Warning in wilcox.test.default(xi, xj, paired = paired, ...): cannot compute
+    ## exact p-value with ties
 
     ## 
-    ##  Pairwise comparisons using Wilcoxon rank sum test 
+    ##  Pairwise comparisons using Wilcoxon rank sum test with continuity correction 
     ## 
     ## data:  drier_pore_do$adj_do and drier_pore_do$pressure 
     ## 
@@ -897,7 +905,7 @@ across pore sizes (paired = TRUE). See below:
     ## 
     ## P value adjustment method: BH
 
-**Table S7: &gt;80% WFPS**
+**Table S6: &gt;80% WFPS**
 
     wetter_pore_do <- 
       do %>% 
@@ -911,7 +919,7 @@ across pore sizes (paired = TRUE). See below:
     )
 
     ## 
-    ##  Pairwise comparisons using Wilcoxon rank sum test 
+    ##  Pairwise comparisons using Wilcoxon rank sum test with continuity correction 
     ## 
     ## data:  wetter_pore_do$adj_do and wetter_pore_do$pressure 
     ## 
@@ -974,7 +982,7 @@ Create a dataframe with unique observation identifiers to use in GLMMs
       summary()
 
     ## Linear mixed-effects model fit by maximum likelihood
-    ##  Data: do_core_id %>% ungroup() %>% mutate_at(vars(adj_do), as.integer) %>%      mutate_at(vars(pressure, field), as.factor) 
+    ##   Data: do_core_id %>% ungroup() %>% mutate_at(vars(adj_do), as.integer) %>%      mutate_at(vars(pressure, field), as.factor) 
     ##   AIC BIC logLik
     ##    NA  NA     NA
     ## 
@@ -990,7 +998,7 @@ Create a dataframe with unique observation identifiers to use in GLMMs
     ## Variance function:
     ##  Structure: fixed weights
     ##  Formula: ~invwt 
-    ## Fixed effects: adj_do ~ tillage + bulk_dens * wfps + incubated_days + pressure 
+    ## Fixed effects:  adj_do ~ tillage + bulk_dens * wfps + incubated_days + pressure 
     ##                                  Value Std.Error  DF   t-value p-value
     ## (Intercept)                   4.711709 2.0361627 138  2.314014  0.0221
     ## tillageTilled Cropland        0.593177 0.1093232  10  5.425902  0.0003
@@ -1002,24 +1010,24 @@ Create a dataframe with unique observation identifiers to use in GLMMs
     ## pressure500                   0.039314 0.0851762 138  0.461559  0.6451
     ## bulk_dens:wfps                0.068380 1.9057522  83  0.035881  0.9715
     ##  Correlation: 
-    ##                              (Intr) tllgTC tllgUG blk_dn wfps   incbt_
-    ## tillageTilled Cropland       -0.139                                   
-    ## tillageUndisturbed Grassland -0.172  0.588                            
-    ## bulk_dens                    -0.993  0.115  0.152                     
-    ## wfps                         -0.972 -0.026  0.115  0.963              
-    ## incubated_days               -0.067 -0.139 -0.037  0.045  0.083       
-    ## pressure300                  -0.035  0.015  0.009  0.010  0.019 -0.005
-    ## pressure500                  -0.022 -0.015 -0.013  0.007  0.010 -0.056
-    ## bulk_dens:wfps                0.974  0.021 -0.123 -0.976 -0.994 -0.084
-    ##                              prs300 prs500
-    ## tillageTilled Cropland                    
-    ## tillageUndisturbed Grassland              
-    ## bulk_dens                                 
-    ## wfps                                      
-    ## incubated_days                            
-    ## pressure300                               
-    ## pressure500                   0.465       
-    ## bulk_dens:wfps               -0.015 -0.009
+    ##                              (Intr) tllgTC tllgUG blk_dn wfps   incbt_ prs300
+    ## tillageTilled Cropland       -0.139                                          
+    ## tillageUndisturbed Grassland -0.172  0.588                                   
+    ## bulk_dens                    -0.993  0.115  0.152                            
+    ## wfps                         -0.972 -0.026  0.115  0.963                     
+    ## incubated_days               -0.067 -0.139 -0.037  0.045  0.083              
+    ## pressure300                  -0.035  0.015  0.009  0.010  0.019 -0.005       
+    ## pressure500                  -0.022 -0.015 -0.013  0.007  0.010 -0.056  0.465
+    ## bulk_dens:wfps                0.974  0.021 -0.123 -0.976 -0.994 -0.084 -0.015
+    ##                              prs500
+    ## tillageTilled Cropland             
+    ## tillageUndisturbed Grassland       
+    ## bulk_dens                          
+    ## wfps                               
+    ## incubated_days                     
+    ## pressure300                        
+    ## pressure500                        
+    ## bulk_dens:wfps               -0.009
     ## 
     ## Standardized Within-Group Residuals:
     ##        Min         Q1        Med         Q3        Max 
@@ -1048,7 +1056,7 @@ Create a dataframe with unique observation identifiers to use in GLMMs
     glmmPQL_do100 %>% summary() 
 
     ## Linear mixed-effects model fit by maximum likelihood
-    ##  Data: do_core_id %>% ungroup() %>% filter(pressure == 100) %>% mutate_at(vars(adj_do),      as.integer) %>% mutate_at(vars(pressure, field), as.factor) 
+    ##   Data: do_core_id %>% ungroup() %>% filter(pressure == 100) %>% mutate_at(vars(adj_do),      as.integer) %>% mutate_at(vars(pressure, field), as.factor) 
     ##   AIC BIC logLik
     ##    NA  NA     NA
     ## 
@@ -1060,7 +1068,7 @@ Create a dataframe with unique observation identifiers to use in GLMMs
     ## Variance function:
     ##  Structure: fixed weights
     ##  Formula: ~invwt 
-    ## Fixed effects: adj_do ~ tillage + bulk_dens * wfps + incubated_days 
+    ## Fixed effects:  adj_do ~ tillage + bulk_dens * wfps + incubated_days 
     ##                                  Value Std.Error DF   t-value p-value
     ## (Intercept)                   0.849542  3.647389 77  0.232918  0.8164
     ## tillageTilled Cropland        1.269303  0.226968 10  5.592425  0.0002
@@ -1103,7 +1111,7 @@ Create a dataframe with unique observation identifiers to use in GLMMs
     glmmPQL_do300 %>% summary()
 
     ## Linear mixed-effects model fit by maximum likelihood
-    ##  Data: do_core_id %>% ungroup() %>% filter(pressure == 300) %>% mutate_at(vars(adj_do),      as.integer) %>% mutate_at(vars(pressure, field), as.factor) 
+    ##   Data: do_core_id %>% ungroup() %>% filter(pressure == 300) %>% mutate_at(vars(adj_do),      as.integer) %>% mutate_at(vars(pressure, field), as.factor) 
     ##   AIC BIC logLik
     ##    NA  NA     NA
     ## 
@@ -1115,7 +1123,7 @@ Create a dataframe with unique observation identifiers to use in GLMMs
     ## Variance function:
     ##  Structure: fixed weights
     ##  Formula: ~invwt 
-    ## Fixed effects: adj_do ~ tillage + bulk_dens * wfps + incubated_days 
+    ## Fixed effects:  adj_do ~ tillage + bulk_dens * wfps + incubated_days 
     ##                                  Value Std.Error DF    t-value p-value
     ## (Intercept)                   3.984414 2.4239441 73  1.6437730  0.1045
     ## tillageTilled Cropland        0.348075 0.1372383 10  2.5362856  0.0296
@@ -1158,7 +1166,7 @@ Create a dataframe with unique observation identifiers to use in GLMMs
     glmmPQL_do500 %>% summary()
 
     ## Linear mixed-effects model fit by maximum likelihood
-    ##  Data: do_core_id %>% ungroup() %>% filter(pressure == 500) %>% mutate_at(vars(adj_do),      as.integer) %>% mutate_at(vars(pressure, field), as.factor) 
+    ##   Data: do_core_id %>% ungroup() %>% filter(pressure == 500) %>% mutate_at(vars(adj_do),      as.integer) %>% mutate_at(vars(pressure, field), as.factor) 
     ##   AIC BIC logLik
     ##    NA  NA     NA
     ## 
@@ -1170,7 +1178,7 @@ Create a dataframe with unique observation identifiers to use in GLMMs
     ## Variance function:
     ##  Structure: fixed weights
     ##  Formula: ~invwt 
-    ## Fixed effects: adj_do ~ tillage + bulk_dens * wfps + incubated_days 
+    ## Fixed effects:  adj_do ~ tillage + bulk_dens * wfps + incubated_days 
     ##                                   Value Std.Error DF   t-value p-value
     ## (Intercept)                   13.889205  5.078996 39  2.734636  0.0093
     ## tillageTilled Cropland         0.453048  0.248622 10  1.822240  0.0984
@@ -1216,7 +1224,7 @@ Create a dataframe with unique observation identifiers to use in GLMMs
     glmmPQL_esm %>% summary()
 
     ## Linear mixed-effects model fit by maximum likelihood
-    ##  Data: do_core_id %>% ungroup() %>% mutate_at(vars(adj_do), as.integer) %>%      mutate_at(vars(pressure, field), as.factor) 
+    ##   Data: do_core_id %>% ungroup() %>% mutate_at(vars(adj_do), as.integer) %>%      mutate_at(vars(pressure, field), as.factor) 
     ##   AIC BIC logLik
     ##    NA  NA     NA
     ## 
@@ -1232,7 +1240,7 @@ Create a dataframe with unique observation identifiers to use in GLMMs
     ## Variance function:
     ##  Structure: fixed weights
     ##  Formula: ~invwt 
-    ## Fixed effects: adj_do ~ tillage * pressure + bulk_dens * wfps + incubated_days 
+    ## Fixed effects:  adj_do ~ tillage * pressure + bulk_dens * wfps + incubated_days 
     ##                                              Value Std.Error  DF   t-value
     ## (Intercept)                               4.149916 1.9640850 134  2.112900
     ## tillageTilled Cropland                    1.303987 0.1883703  10  6.922467
@@ -1262,45 +1270,45 @@ Create a dataframe with unique observation identifiers to use in GLMMs
     ## tillageUndisturbed Grassland:pressure500  0.0000
     ## bulk_dens:wfps                            0.9220
     ##  Correlation: 
-    ##                                          (Intr) tllgTC tllgUG prs300
-    ## tillageTilled Cropland                   -0.122                     
-    ## tillageUndisturbed Grassland             -0.139  0.781              
-    ## pressure300                              -0.067  0.733  0.777       
-    ## pressure500                              -0.057  0.663  0.699  0.680
-    ## bulk_dens                                -0.991  0.052  0.071 -0.004
-    ## wfps                                     -0.969 -0.028  0.049 -0.003
-    ## incubated_days                           -0.066 -0.068 -0.018  0.001
-    ## tillageTilled Cropland:pressure300        0.046 -0.774 -0.678 -0.873
-    ## tillageUndisturbed Grassland:pressure300  0.058 -0.640 -0.835 -0.866
-    ## tillageTilled Cropland:pressure500        0.041 -0.688 -0.600 -0.585
-    ## tillageUndisturbed Grassland:pressure500  0.048 -0.548 -0.707 -0.554
-    ## bulk_dens:wfps                            0.971  0.024 -0.054  0.004
-    ##                                          prs500 blk_dn wfps   incbt_
-    ## tillageTilled Cropland                                              
-    ## tillageUndisturbed Grassland                                        
-    ## pressure300                                                         
-    ## pressure500                                                         
-    ## bulk_dens                                -0.006                     
-    ## wfps                                     -0.008  0.963              
-    ## incubated_days                           -0.006  0.044  0.082       
-    ## tillageTilled Cropland:pressure300       -0.593  0.015  0.014 -0.004
-    ## tillageUndisturbed Grassland:pressure300 -0.589  0.001  0.006 -0.001
-    ## tillageTilled Cropland:pressure500       -0.860  0.014  0.014 -0.032
-    ## tillageUndisturbed Grassland:pressure500 -0.816  0.003  0.011 -0.001
-    ## bulk_dens:wfps                            0.008 -0.976 -0.994 -0.083
-    ##                                          tTC:30 tUG:30 tTC:50 tUG:50
-    ## tillageTilled Cropland                                              
-    ## tillageUndisturbed Grassland                                        
-    ## pressure300                                                         
-    ## pressure500                                                         
-    ## bulk_dens                                                           
-    ## wfps                                                                
-    ## incubated_days                                                      
-    ## tillageTilled Cropland:pressure300                                  
-    ## tillageUndisturbed Grassland:pressure300  0.756                     
-    ## tillageTilled Cropland:pressure500        0.620  0.507              
-    ## tillageUndisturbed Grassland:pressure500  0.484  0.594  0.702       
-    ## bulk_dens:wfps                           -0.014 -0.005 -0.014 -0.010
+    ##                                          (Intr) tllgTC tllgUG prs300 prs500
+    ## tillageTilled Cropland                   -0.122                            
+    ## tillageUndisturbed Grassland             -0.139  0.781                     
+    ## pressure300                              -0.067  0.733  0.777              
+    ## pressure500                              -0.057  0.663  0.699  0.680       
+    ## bulk_dens                                -0.991  0.052  0.071 -0.004 -0.006
+    ## wfps                                     -0.969 -0.028  0.049 -0.003 -0.008
+    ## incubated_days                           -0.066 -0.068 -0.018  0.001 -0.006
+    ## tillageTilled Cropland:pressure300        0.046 -0.774 -0.678 -0.873 -0.593
+    ## tillageUndisturbed Grassland:pressure300  0.058 -0.640 -0.835 -0.866 -0.589
+    ## tillageTilled Cropland:pressure500        0.041 -0.688 -0.600 -0.585 -0.860
+    ## tillageUndisturbed Grassland:pressure500  0.048 -0.548 -0.707 -0.554 -0.816
+    ## bulk_dens:wfps                            0.971  0.024 -0.054  0.004  0.008
+    ##                                          blk_dn wfps   incbt_ tTC:30 tUG:30
+    ## tillageTilled Cropland                                                     
+    ## tillageUndisturbed Grassland                                               
+    ## pressure300                                                                
+    ## pressure500                                                                
+    ## bulk_dens                                                                  
+    ## wfps                                      0.963                            
+    ## incubated_days                            0.044  0.082                     
+    ## tillageTilled Cropland:pressure300        0.015  0.014 -0.004              
+    ## tillageUndisturbed Grassland:pressure300  0.001  0.006 -0.001  0.756       
+    ## tillageTilled Cropland:pressure500        0.014  0.014 -0.032  0.620  0.507
+    ## tillageUndisturbed Grassland:pressure500  0.003  0.011 -0.001  0.484  0.594
+    ## bulk_dens:wfps                           -0.976 -0.994 -0.083 -0.014 -0.005
+    ##                                          tTC:50 tUG:50
+    ## tillageTilled Cropland                                
+    ## tillageUndisturbed Grassland                          
+    ## pressure300                                           
+    ## pressure500                                           
+    ## bulk_dens                                             
+    ## wfps                                                  
+    ## incubated_days                                        
+    ## tillageTilled Cropland:pressure300                    
+    ## tillageUndisturbed Grassland:pressure300              
+    ## tillageTilled Cropland:pressure500                    
+    ## tillageUndisturbed Grassland:pressure500  0.702       
+    ## bulk_dens:wfps                           -0.014 -0.010
     ## 
     ## Standardized Within-Group Residuals:
     ##        Min         Q1        Med         Q3        Max 

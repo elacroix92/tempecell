@@ -22,11 +22,10 @@ Emily Lacroix
 -   [Figures](#figures)
     -   [Figure 2 - Cumulative CO2 by moisture &
         tillage](#figure-2---cumulative-co2-by-moisture-tillage)
-    -   [Figure S4 - CO2 by moisture & disturbance over
-        time](#figure-s4---co2-by-moisture-disturbance-over-time)
+    -   [Figure S6 - CO2 by moisture & disturbance over
+        time](#figure-s6---co2-by-moisture-disturbance-over-time)
 
-Set-Up
-------
+## Set-Up
 
 ### Load libraries
 
@@ -76,8 +75,7 @@ Set-Up
 
     core_surface_area_m2 <- 0.0001 * pi * (5.40 / 2)^2 
 
-Import & Clean Data
--------------------
+## Import & Clean Data
 
 ### Import GHG Data
 
@@ -110,8 +108,9 @@ Summarize OC data to the field-averaged level
         mean_perc_n = mean(perc_n, na.rm = TRUE)
       ) 
 
-Flux Calculations
------------------
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+## Flux Calculations
 
 ### Calculate the normalized fluxes
 
@@ -184,6 +183,8 @@ This code:
         se_g_co2_rate = 
           sd(co2_flux_g_m2_hr_norm, na.rm = TRUE) / sqrt(n())
       ) 
+
+    ## `summarise()` regrouping output by 'day_sampled', 'tillage' (override with `.groups` argument)
 
     ghg_means_normalized 
 
@@ -259,6 +260,8 @@ Using the mean fluxes calculated above, this code:
       ) %>% 
       knitr::kable()
 
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
 | AMC  | avg\_cumulative\_g\_co2\_norm | se\_cumulative\_g\_co2\_norm |
 |:-----|------------------------------:|-----------------------------:|
 | low  |                      95.24692 |                     6.259516 |
@@ -274,6 +277,8 @@ Using the mean fluxes calculated above, this code:
       ) %>% 
       knitr::kable()
 
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
 | tillage     | avg\_cumulative\_g\_co2\_norm | se\_cumulative\_g\_co2\_norm |
 |:------------|------------------------------:|-----------------------------:|
 | Undisturbed |                               |                              |
@@ -283,8 +288,7 @@ Using the mean fluxes calculated above, this code:
 | Disturbed   |                               |                              |
 | Grassland   |                     110.05826 |                     6.498425 |
 
-Figures
--------
+## Figures
 
 ### Figure 2 - Cumulative CO2 by moisture & tillage
 
@@ -330,11 +334,11 @@ Figures
 
 ![](CO2_Efflux_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
-### Figure S4 - CO2 by moisture & disturbance over time
+### Figure S6 - CO2 by moisture & disturbance over time
 
     ghg_means_normalized %>%   
       ggplot(
-        aes(x = day_sampled, color = tillage, y = mean_g_co2_rate)
+        aes(x = day_sampled, color = tillage, y = mean_g_co2_rate, shape = tillage)
       ) +
       geom_line(linetype = 2) +
       geom_errorbar(
@@ -344,14 +348,9 @@ Figures
         ),
         width = 0.8
       ) + 
-      geom_point(aes(fill = tillage), size = 3, shape = 21, color = "black") +
+      geom_point(aes(fill = tillage), size = 3) +
       scale_x_continuous(breaks = c(1, 3, 7, 14, 28)) + 
       scale_color_manual(values = c("gray60", "grey39", "grey12")) + 
-      scale_fill_manual(values = c("gray60", "grey39", "grey12")) + 
-      guides(
-        color = "none",
-        fill = guide_legend(reverse = TRUE)
-      ) + 
       facet_grid(
         cols = vars(AMC),
         labeller = labeller(AMC = moisture_label)
@@ -372,7 +371,8 @@ Figures
         y = expression(CO[2]~Flux~(g~CO[2]~m^-2~h^-1~g~soil~C^-1)),
         x = "Days Incubated",
         color = NULL,
-        fill = NULL
+        fill = NULL,
+        shape = NULL
       ) 
 
 ![](CO2_Efflux_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->

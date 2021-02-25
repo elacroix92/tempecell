@@ -651,9 +651,9 @@ The variances amongst the tillage x pressure groups are unequal.
 
 ### Pairwise Wilcoxon Rank Sum Test
 
-#### Table S6: DO Across Pore Sizes 
+#### Table S5: DO Across Pore Sizes 
 
-```{r Table S6}
+```{r Table S5}
 
 pairwise.wilcox.test(
   x = do$adj_do,
@@ -692,7 +692,7 @@ pairwise.wilcox.test(
 ```
 
 
-#### Table S6: DO Across Disturbance Treatments by Pore Size
+#### Table S5: DO Across Disturbance Treatments by Pore Size
 
 __Largest pores__
 ```{r Largest pores}
@@ -744,7 +744,7 @@ pairwise.wilcox.test(
 
 #### Table S7: Across Pore Sizes, Separated by Moisture Class
 
-__Table S7: <80% WFPS__
+__Table S6: <80% WFPS__
 
 ```{r Table S7, Drier Soils}
 
@@ -761,7 +761,7 @@ pairwise.wilcox.test(
 
 ```
 
-__Table S7: >80% WFPS__
+__Table S6: >80% WFPS__
 
 ```{r Table S7, Wetter Soils}
 wetter_pore_do <- 
