@@ -34,7 +34,7 @@ SEM <- function(x) sd(x, na.rm = TRUE)/sqrt(length(na.omit(x)))
 ### Designate file paths
 ```{r}
 
-data_file <- "~/Desktop/TempeCell_MasterSpreadsheet.xlsx"
+data_file <- "~/Desktop/TempeCell_AllData.xlsx"
 
 ```
 

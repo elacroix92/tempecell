@@ -46,7 +46,7 @@ Emily Lacroix
 
 ### Designate filepaths
 
-    data_file <- "~/Desktop/TempeCell_MasterSpreadsheet.xlsx"
+    data_file <- "~/Desktop/TempeCell_AllData.xlsx"
 
 ### Figure labels
 

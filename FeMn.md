@@ -44,7 +44,7 @@ Rob Rossi
 
 ### Designate file paths
 
-    data_file <- "~/Desktop/TempeCell_MasterSpreadsheet.xlsx"
+    data_file <- "~/Desktop/TempeCell_AllData.xlsx"
 
 ## Import & Clean Data
 

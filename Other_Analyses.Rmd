@@ -27,7 +27,7 @@ conflicted::conflict_prefer("filter", "dplyr")
 ### Designate file paths
 ```{r}
 
-data_file <- "~/Desktop/TempeCell_MasterSpreadsheet.xlsx"
+data_file <- "~/Desktop/TempeCell_AllData.xlsx"
 
 ```
 
