@@ -16,7 +16,7 @@ the user’s desktop.
 
 Each RMarkdown file regenerates all results and figures used in the
 manuscript. The `.md` files in this repo show formatted code output. The
-`.Rmd` files can be downloaded to run and edit on your lcoal machine.
+`.Rmd` files can be downloaded to run and edit on your local machine.
 
 `DO.md` shows data processing for DO data. `FeMn.md` shows data
 processing for Fe and Mn reduction. `CO2_Efflux.md` shows data
